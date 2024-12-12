@@ -1,31 +1,46 @@
 import Navigation from "@/components/Navigation";
 import MemorialHero from "@/components/MemorialHero";
 import PhotoGrid from "@/components/PhotoGrid";
+import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
-const SAMPLE_PHOTOS = [
-  {
-    id: 1,
-    url: "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07",
-    caption: "A beautiful summer day in the garden",
-  },
-  {
-    id: 2,
-    url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
-    caption: "Family gathering at the lake",
-  },
-  {
-    id: 3,
-    url: "https://images.unsplash.com/photo-1470813740244-df37b8c1edcb",
-    caption: "Starlit evening memories",
-  },
-  {
-    id: 4,
-    url: "",
-    caption: "Share your memory",
-  },
-];
+interface Photo {
+  id: number;
+  url: string;
+  caption: string;
+}
 
 const Index = () => {
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const { toast } = useToast();
+
+  const handlePhotoAdd = async (file: File) => {
+    try {
+      // Create a temporary URL for the uploaded file
+      const url = URL.createObjectURL(file);
+      
+      // Add the new photo to the grid
+      const newPhoto: Photo = {
+        id: photos.length + 1,
+        url,
+        caption: file.name, // You might want to add a proper caption input later
+      };
+      
+      setPhotos([...photos, newPhoto]);
+      
+      toast({
+        title: "Photo added successfully",
+        description: "Your memory has been added to the memorial.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error adding photo",
+        description: "There was a problem adding your photo. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-memorial-blue-light to-white">
       <Navigation />
@@ -46,15 +61,21 @@ const Index = () => {
         </div>
 
         <div className="grid lg:grid-cols-[1fr,300px] gap-8">
-          <PhotoGrid photos={SAMPLE_PHOTOS} />
+          <PhotoGrid photos={photos} onPhotoAdd={handlePhotoAdd} />
           
           <aside className="space-y-6">
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h3 className="font-medium text-gray-800 mb-4">Recent Activity</h3>
               <div className="space-y-3">
-                <p className="text-sm text-gray-600">John added a photo 5 minutes ago</p>
-                <p className="text-sm text-gray-600">Sarah shared a memory yesterday</p>
-                <p className="text-sm text-gray-600">Mike contributed 2 photos last week</p>
+                {photos.length > 0 ? (
+                  photos.slice(-3).map((photo, index) => (
+                    <p key={index} className="text-sm text-gray-600">
+                      A new memory was added {index === 0 ? "just now" : index === 1 ? "yesterday" : "last week"}
+                    </p>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-600">No recent activity</p>
+                )}
               </div>
             </div>
           </aside>

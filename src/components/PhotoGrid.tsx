@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Image, Plus } from "lucide-react";
 import { Button } from "./ui/button";
+import { useToast } from "./ui/use-toast";
 
 interface Photo {
   id: number;
@@ -10,49 +11,67 @@ interface Photo {
 
 interface PhotoGridProps {
   photos: Photo[];
+  onPhotoAdd: (file: File) => void;
 }
 
-const PhotoGrid = ({ photos }: PhotoGridProps) => {
-  if (photos.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center p-12 bg-memorial-gray-light/20 rounded-lg border-2 border-dashed border-memorial-gray">
-        <Image className="w-16 h-16 text-memorial-gray-dark mb-4" />
-        <h3 className="text-xl font-medium text-gray-700 mb-2">No memories added yet</h3>
-        <p className="text-gray-500 mb-6">Be the first to contribute a cherished memory</p>
-        <Button>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Memory
-        </Button>
-      </div>
-    );
-  }
+const PhotoGrid = ({ photos, onPhotoAdd }: PhotoGridProps) => {
+  const { toast } = useToast();
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  // Create array of 25 cells (5x5 grid)
+  const gridCells = Array(25).fill(null).map((_, index) => {
+    const photo = photos[index];
+    return { id: index, photo };
+  });
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.type.startsWith('image/')) {
+        onPhotoAdd(file);
+      } else {
+        toast({
+          title: "Invalid file type",
+          description: "Please select an image file",
+          variant: "destructive",
+        });
+      }
+    }
+  };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-      {photos.map((photo) => (
-        <div 
-          key={photo.id} 
-          className="group relative overflow-hidden rounded-lg shadow-md transition-all duration-300 hover:shadow-xl"
-          role="button"
-          tabIndex={0}
-          aria-label={`View memory: ${photo.caption}`}
+    <div className="grid grid-cols-5 gap-4">
+      {gridCells.map(({ id, photo }) => (
+        <div
+          key={id}
+          className="relative aspect-square group"
+          onMouseEnter={() => setHoveredIndex(id)}
+          onMouseLeave={() => setHoveredIndex(null)}
         >
-          <div className="relative aspect-[4/3]">
-            {photo.url ? (
+          {photo ? (
+            <div className="w-full h-full relative overflow-hidden rounded-lg shadow-md">
               <img
                 src={photo.url}
                 alt={photo.caption}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-memorial-gray-light/50 backdrop-blur-sm">
-                <Plus className="w-12 h-12 text-memorial-gray-dark" />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <p className="absolute bottom-0 left-0 right-0 p-4 text-white text-sm">
+                  {photo.caption}
+                </p>
               </div>
-            )}
-          </div>
-          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent transform translate-y-2 transition-transform duration-300 group-hover:translate-y-0">
-            <p className="text-white text-lg font-medium">{photo.caption}</p>
-          </div>
+            </div>
+          ) : (
+            <label className="w-full h-full flex items-center justify-center border-2 border-dashed border-memorial-gray rounded-lg cursor-pointer hover:bg-memorial-gray-light/20 transition-colors">
+              <input
+                type="file"
+                className="hidden"
+                accept="image/*"
+                onChange={handleFileChange}
+              />
+              <Plus className="w-8 h-8 text-memorial-gray-dark" />
+            </label>
+          )}
         </div>
       ))}
     </div>
