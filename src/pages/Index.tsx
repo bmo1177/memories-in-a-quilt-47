@@ -1,3 +1,4 @@
+import Navigation from "@/components/Navigation";
 import MemorialHero from "@/components/MemorialHero";
 import PhotoGrid from "@/components/PhotoGrid";
 
@@ -27,10 +28,11 @@ const SAMPLE_PHOTOS = [
 const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-memorial-blue-light to-white">
+      <Navigation />
       <MemorialHero
         name="In Loving Memory"
         dates="A Life Beautiful"
-        photoUrl="/lovable-uploads/804849ce-7fe7-4774-8537-1cea1f0fd6ad.png"
+        photoUrl="https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1920"
       />
       
       <main className="container mx-auto py-16 px-4">
